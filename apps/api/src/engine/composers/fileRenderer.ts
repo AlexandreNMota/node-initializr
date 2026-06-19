@@ -106,7 +106,7 @@ function getEnvVars(fragments: Fragment[]): EnvVar[] {
   return fragments.flatMap((fragment) => fragment.manifest.envVars ?? []);
 }
 
-function buildEnvExample(envVars: EnvVar[]): string {
+export function buildEnvExample(envVars: EnvVar[]): string {
   const uniqueEnvVars = new Map<string, EnvVar>();
 
   for (const envVar of envVars) {
@@ -120,7 +120,7 @@ function buildEnvExample(envVars: EnvVar[]): string {
     .join('\n');
 }
 
-function stripEjsExtension(filePath: string): string {
+export function stripEjsExtension(filePath: string): string {
   return filePath.replace(/\.ejs$/, '');
 }
 

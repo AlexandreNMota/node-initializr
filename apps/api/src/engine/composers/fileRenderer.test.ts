@@ -4,7 +4,7 @@ import type { GenerateConfig } from '@node-initializr/shared';
 import { describe, expect, it } from 'vitest';
 
 import type { Fragment } from '../types.js';
-import { renderFiles } from './fileRenderer.js';
+import { buildEnvExample, renderFiles, stripEjsExtension } from './fileRenderer.js';
 
 const baseConfig: GenerateConfig = {
   name: 'meu-projeto',
@@ -193,5 +193,57 @@ describe('FileRenderer - tratamento de erros', () => {
     await expect(renderFiles([makeFragment('fragment-no-files-dir')], baseConfig)).rejects.toThrow(
       'files/',
     );
+  });
+});
+
+describe('buildEnvExample', () => {
+  it('deve gerar conteudo deterministico com KEY=example', () => {
+    const content = buildEnvExample([
+      {
+        key: 'DATABASE_URL',
+        example: 'postgresql://user:pass@localhost:5432/db',
+        description: 'Conexao com o banco',
+        required: true,
+      },
+      {
+        key: 'JWT_SECRET',
+        example: 'secret',
+        description: 'Secret JWT',
+        required: true,
+      },
+    ]);
+
+    expect(content).toBe(
+      ['DATABASE_URL=postgresql://user:pass@localhost:5432/db', 'JWT_SECRET=secret'].join('\n'),
+    );
+  });
+
+  it('deve remover variaveis duplicadas mantendo a primeira ocorrencia', () => {
+    const content = buildEnvExample([
+      {
+        key: 'PORT',
+        example: '3000',
+        description: 'Porta',
+        required: true,
+      },
+      {
+        key: 'PORT',
+        example: '4000',
+        description: 'Porta alternativa',
+        required: true,
+      },
+    ]);
+
+    expect(content).toBe('PORT=3000');
+  });
+});
+
+describe('stripEjsExtension', () => {
+  it('deve remover extensao .ejs do final do path', () => {
+    expect(stripEjsExtension('src/app.ts.ejs')).toBe('src/app.ts');
+  });
+
+  it('nao deve alterar path sem extensao .ejs', () => {
+    expect(stripEjsExtension('src/app.ts')).toBe('src/app.ts');
   });
 });
