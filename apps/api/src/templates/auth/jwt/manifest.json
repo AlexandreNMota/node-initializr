@@ -1,0 +1,23 @@
+{
+  "id": "auth/jwt",
+  "dependencies": {
+    "jsonwebtoken": "9.0.2"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "9.0.6"
+  },
+  "envVars": [
+    {
+      "key": "JWT_SECRET",
+      "example": "change-me",
+      "description": "Secret usado para assinar tokens JWT",
+      "required": true
+    },
+    {
+      "key": "JWT_EXPIRES_IN",
+      "example": "1d",
+      "description": "Tempo de expiracao do token JWT",
+      "required": true
+    }
+  ]
+}

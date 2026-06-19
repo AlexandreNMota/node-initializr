@@ -120,9 +120,31 @@ export const fragmentRegistry = {
 
   'auth/jwt': {
     id: 'auth/jwt',
-    path: createFixturePath('auth-jwt'),
+    path: createTemplatePath('auth', 'jwt'),
     priority: 40,
-    manifest: { id: 'auth/jwt' },
+    manifest: {
+      id: 'auth/jwt',
+      dependencies: {
+        jsonwebtoken: '9.0.2',
+      },
+      devDependencies: {
+        '@types/jsonwebtoken': '9.0.6',
+      },
+      envVars: [
+        {
+          key: 'JWT_SECRET',
+          example: 'change-me',
+          description: 'Secret usado para assinar tokens JWT',
+          required: true,
+        },
+        {
+          key: 'JWT_EXPIRES_IN',
+          example: '1d',
+          description: 'Tempo de expiracao do token JWT',
+          required: true,
+        },
+      ],
+    },
   },
   'auth/clerk': {
     id: 'auth/clerk',

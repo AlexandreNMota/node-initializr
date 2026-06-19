@@ -189,4 +189,50 @@ describe('generateProject', () => {
 
     expect(envExample).toContain('DATABASE_URL=postgresql://postgres:postgres@localhost:5432/app');
   });
+
+  it('deve incluir arquivos JWT TypeScript no zip gerado', async () => {
+    const zipBuffer = await generateProject(validConfig);
+    const zip = await JSZip.loadAsync(zipBuffer);
+
+    expect(zip.file('src/lib/jwt.ts')).toBeDefined();
+    expect(zip.file('src/middlewares/auth.ts')).toBeDefined();
+  });
+
+  it('deve incluir arquivos JWT JavaScript quando language e javascript', async () => {
+    const zipBuffer = await generateProject({
+      ...validConfig,
+      language: 'javascript',
+    });
+    const zip = await JSZip.loadAsync(zipBuffer);
+
+    expect(zip.file('src/lib/jwt.js')).toBeDefined();
+    expect(zip.file('src/middlewares/auth.js')).toBeDefined();
+    expect(zip.file('src/lib/jwt.ts')).toBeNull();
+    expect(zip.file('src/middlewares/auth.ts')).toBeNull();
+  });
+
+  it('deve incluir JWT no package.json gerado', async () => {
+    const zipBuffer = await generateProject(validConfig);
+    const zip = await JSZip.loadAsync(zipBuffer);
+    const packageJsonContent = await zip.file('package.json')?.async('string');
+
+    expect(packageJsonContent).toBeDefined();
+
+    const packageJson = JSON.parse(packageJsonContent ?? '{}') as {
+      dependencies: Record<string, string>;
+      devDependencies: Record<string, string>;
+    };
+
+    expect(packageJson.dependencies.jsonwebtoken).toBe('9.0.2');
+    expect(packageJson.devDependencies['@types/jsonwebtoken']).toBe('9.0.6');
+  });
+
+  it('deve incluir variaveis JWT no .env.example gerado', async () => {
+    const zipBuffer = await generateProject(validConfig);
+    const zip = await JSZip.loadAsync(zipBuffer);
+    const envExample = await zip.file('.env.example')?.async('string');
+
+    expect(envExample).toContain('JWT_SECRET=change-me');
+    expect(envExample).toContain('JWT_EXPIRES_IN=1d');
+  });
 });
