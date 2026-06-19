@@ -89,4 +89,39 @@ describe('App', () => {
     expect(screen.getByText('application')).toBeInTheDocument();
     expect(screen.getByText('infrastructure')).toBeInTheDocument();
   });
+
+  it('desabilita ORMs quando database e none', () => {
+    render(<App />);
+
+    expect(screen.getByRole('button', { name: /Prisma/ })).toBeDisabled();
+    expect(screen.getByText('Select a database to enable ORM options.')).toBeInTheDocument();
+  });
+
+  it('altera database e orm e atualiza FileTree para prisma', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: /PostgreSQL/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Prisma/ }));
+
+    expect(useConfigStore.getState().config.database).toBe('postgresql');
+    expect(useConfigStore.getState().config.orm).toBe('prisma');
+    expect(screen.getByText('prisma')).toBeInTheDocument();
+    expect(screen.getByText('schema.prisma')).toBeInTheDocument();
+  });
+
+  it('desabilita mongoose quando database nao e mongodb', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: /PostgreSQL/ }));
+
+    expect(screen.getByRole('button', { name: /Mongoose/ })).toBeDisabled();
+  });
+
+  it('desabilita drizzle quando database e mongodb', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: /^MongoDB/ }));
+
+    expect(screen.getByRole('button', { name: /Drizzle/ })).toBeDisabled();
+  });
 });

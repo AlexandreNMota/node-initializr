@@ -3,6 +3,8 @@ import { Button } from './components/ui/button';
 import { Input } from './components/ui/input';
 import { Label } from './components/ui/label';
 import { useConfigStore } from './store/configStore';
+import type { GenerateConfig } from '@node-initializr/shared';
+import { checkCompatibility } from './lib/compatibility';
 
 const PACKAGE_MANAGERS = ['npm', 'pnpm', 'yarn'] as const;
 const FRAMEWORKS = [
@@ -35,14 +37,51 @@ const ARCHITECTURES = [
   },
 ] as const;
 
+const DATABASES = [
+  { value: 'none', label: 'None', description: 'No database integration' },
+  { value: 'postgresql', label: 'PostgreSQL', description: 'Relational database' },
+  { value: 'mysql', label: 'MySQL', description: 'Relational database' },
+  { value: 'mongodb', label: 'MongoDB', description: 'Document database' },
+  { value: 'sqlite', label: 'SQLite', description: 'Local relational database' },
+] as const;
+
+const ORMS = [
+  { value: 'none', label: 'None', description: 'No ORM' },
+  { value: 'prisma', label: 'Prisma', description: 'Type-safe ORM' },
+  { value: 'typeorm', label: 'TypeORM', description: 'Decorator-based ORM' },
+  { value: 'drizzle', label: 'Drizzle', description: 'SQL query builder' },
+  { value: 'mongoose', label: 'Mongoose', description: 'MongoDB object modeling' },
+] as const;
+
 function isValidProjectName(name: string): boolean {
   return /^[a-z0-9-]+$/.test(name) && name.length > 0 && name.length <= 64;
+}
+
+function isOrmDisabled(database: GenerateConfig['database'], orm: GenerateConfig['orm']): boolean {
+  if (orm === 'none') {
+    return false;
+  }
+
+  if (database === 'none') {
+    return true;
+  }
+
+  if (orm === 'mongoose' && database !== 'mongodb') {
+    return true;
+  }
+
+  if (orm === 'drizzle' && database === 'mongodb') {
+    return true;
+  }
+
+  return false;
 }
 
 function App() {
   const config = useConfigStore((state) => state.config);
   const setField = useConfigStore((state) => state.setField);
   const isNameValid = isValidProjectName(config.name);
+  const compatibilityErrors = checkCompatibility(config);
 
   return (
     <main className="min-h-screen bg-slate-100 text-slate-950">
@@ -239,6 +278,107 @@ function App() {
                   );
                 })}
               </div>
+            </section>
+
+            <section className="mt-5 rounded-lg border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+              <div className="mb-6">
+                <h2 className="text-lg font-semibold text-slate-950">Data</h2>
+                <p className="mt-1 text-sm text-slate-600">
+                  Pick a database and the persistence layer.
+                </p>
+              </div>
+
+              <fieldset>
+                <legend className="mb-3 text-sm font-medium text-slate-700">Database</legend>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {DATABASES.map((database) => {
+                    const isSelected = config.database === database.value;
+
+                    return (
+                      <button
+                        key={database.value}
+                        type="button"
+                        aria-pressed={isSelected}
+                        className={
+                          isSelected
+                            ? 'rounded-lg border border-slate-950 bg-slate-950 p-4 text-left text-white shadow-sm'
+                            : 'rounded-lg border border-slate-200 bg-white p-4 text-left text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50'
+                        }
+                        onClick={() => {
+                          setField('database', database.value);
+
+                          if (database.value === 'none') {
+                            setField('orm', 'none');
+                          }
+                        }}
+                      >
+                        <span className="block text-sm font-semibold">{database.label}</span>
+                        <span
+                          className={
+                            isSelected
+                              ? 'mt-1 block text-sm text-slate-300'
+                              : 'mt-1 block text-sm text-slate-500'
+                          }
+                        >
+                          {database.description}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </fieldset>
+
+              <fieldset className="mt-6">
+                <legend className="mb-3 text-sm font-medium text-slate-700">ORM</legend>
+
+                {config.database === 'none' ? (
+                  <p className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                    Select a database to enable ORM options.
+                  </p>
+                ) : null}
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {ORMS.map((orm) => {
+                    const isSelected = config.orm === orm.value;
+                    const isDisabled = isOrmDisabled(config.database, orm.value);
+
+                    return (
+                      <button
+                        key={orm.value}
+                        type="button"
+                        aria-pressed={isSelected}
+                        disabled={isDisabled}
+                        className={
+                          isSelected
+                            ? 'rounded-lg border border-blue-700 bg-blue-700 p-4 text-left text-white shadow-sm'
+                            : 'rounded-lg border border-slate-200 bg-white p-4 text-left text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400'
+                        }
+                        onClick={() => setField('orm', orm.value)}
+                      >
+                        <span className="block text-sm font-semibold">{orm.label}</span>
+                        <span
+                          className={
+                            isSelected
+                              ? 'mt-1 block text-sm text-blue-100'
+                              : 'mt-1 block text-sm text-slate-500'
+                          }
+                        >
+                          {orm.description}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </fieldset>
+
+              {compatibilityErrors.length > 0 ? (
+                <div className="mt-5 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                  {compatibilityErrors.map((error) => (
+                    <p key={error.field + '-' + error.message}>{error.message}</p>
+                  ))}
+                </div>
+              ) : null}
             </section>
           </div>
         </section>
