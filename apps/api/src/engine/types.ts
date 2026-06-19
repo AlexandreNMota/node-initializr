@@ -25,3 +25,9 @@ export type Fragment = {
 };
 
 export type { GenerateConfig };
+
+export type GeneratedFile = {
+  path: string;
+  content: string;
+  encoding: 'utf-8';
+};

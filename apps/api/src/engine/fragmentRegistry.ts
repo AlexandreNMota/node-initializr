@@ -6,7 +6,7 @@ import type { Fragment } from './types.js';
 const currentFilePath = fileURLToPath(import.meta.url);
 const currentDirPath = path.dirname(currentFilePath);
 const fixturesDirPath = path.join(currentDirPath, '__fixtures__');
-
+const templatesDirPath = path.join(currentDirPath, '..', 'templates');
 // type FragmentRegistryEntry = Omit<Fragment, 'manifest'> & {
 //   manifest: Fragment['manifest'];
 // };
@@ -15,7 +15,7 @@ type FragmentRegistryEntry = {
   path: string;
   priority: number;
   manifest: Fragment['manifest'];
-}
+};
 
 function createFixturePath(name: string): string {
   return path.join(fixturesDirPath, name);
@@ -24,22 +24,64 @@ function createFixturePath(name: string): string {
 export const fragmentRegistry = {
   'base/typescript': {
     id: 'base/typescript',
-    path: createFixturePath('base-typescript'),
+    path: createTemplatePath('base', 'typescript'),
     priority: 10,
-    manifest: { id: 'base/typescript' },
+    manifest: {
+      id: 'base/typescript',
+      devDependencies: {
+        typescript: '5.5.4',
+        tsx: '4.19.2',
+      },
+      scripts: {
+        dev: 'tsx watch src/server.ts',
+        build: 'tsc',
+        start: 'node dist/server.js',
+      },
+      envVars: [
+        {
+          key: 'PORT',
+          example: '3000',
+          description: 'Porta HTTP da aplicacao',
+          required: true,
+        },
+      ],
+    },
   },
   'base/javascript': {
     id: 'base/javascript',
-    path: createFixturePath('base-javascript'),
+    path: createTemplatePath('base', 'javascript'),
     priority: 10,
-    manifest: { id: 'base/javascript' },
+    manifest: {
+      id: 'base/javascript',
+      envVars: [
+        {
+          key: 'PORT',
+          example: '3000',
+          description: 'Porta HTTP da aplicacao',
+          required: true,
+        },
+      ],
+    },
   },
 
   'frameworks/express': {
     id: 'frameworks/express',
-    path: createFixturePath('frameworks-express'),
+    path: createTemplatePath('frameworks', 'express'),
     priority: 20,
-    manifest: { id: 'frameworks/express' },
+    manifest: {
+      id: 'frameworks/express',
+      dependencies: {
+        express: '4.19.2',
+      },
+      devDependencies: {
+        '@types/express': '4.17.21',
+      },
+      scripts: {
+        dev: 'tsx watch src/server.ts',
+        build: 'tsc',
+        start: 'node dist/server.js',
+      },
+    },
   },
   'frameworks/fastify': {
     id: 'frameworks/fastify',
@@ -62,9 +104,29 @@ export const fragmentRegistry = {
 
   'orms/prisma': {
     id: 'orms/prisma',
-    path: createFixturePath('orms-prisma'),
+    path: createTemplatePath('orms', 'prisma'),
     priority: 30,
-    manifest: { id: 'orms/prisma' },
+    manifest: {
+      id: 'orms/prisma',
+      dependencies: {
+        '@prisma/client': '5.14.0',
+      },
+      devDependencies: {
+        prisma: '5.14.0',
+      },
+      scripts: {
+        'db:migrate': 'prisma migrate dev',
+        'db:generate': 'prisma generate',
+      },
+      envVars: [
+        {
+          key: 'DATABASE_URL',
+          example: 'postgresql://postgres:postgres@localhost:5432/app',
+          description: 'String de conexao com o banco de dados',
+          required: true,
+        },
+      ],
+    },
   },
   'orms/typeorm': {
     id: 'orms/typeorm',
@@ -87,9 +149,31 @@ export const fragmentRegistry = {
 
   'auth/jwt': {
     id: 'auth/jwt',
-    path: createFixturePath('auth-jwt'),
+    path: createTemplatePath('auth', 'jwt'),
     priority: 40,
-    manifest: { id: 'auth/jwt' },
+    manifest: {
+      id: 'auth/jwt',
+      dependencies: {
+        jsonwebtoken: '9.0.2',
+      },
+      devDependencies: {
+        '@types/jsonwebtoken': '9.0.6',
+      },
+      envVars: [
+        {
+          key: 'JWT_SECRET',
+          example: 'change-me',
+          description: 'Secret usado para assinar tokens JWT',
+          required: true,
+        },
+        {
+          key: 'JWT_EXPIRES_IN',
+          example: '1d',
+          description: 'Tempo de expiracao do token JWT',
+          required: true,
+        },
+      ],
+    },
   },
   'auth/clerk': {
     id: 'auth/clerk',
@@ -149,3 +233,6 @@ export const fragmentRegistry = {
 } satisfies Record<string, FragmentRegistryEntry>;
 
 export type FragmentId = keyof typeof fragmentRegistry;
+function createTemplatePath(...segments: string[]): string {
+  return path.join(templatesDirPath, ...segments);
+}

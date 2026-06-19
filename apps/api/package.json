@@ -11,14 +11,21 @@
   },
   "dependencies": {
     "@node-initializr/shared": "workspace:*",
-    "express": "latest"
+    "archiver": "^8.0.0",
+    "ejs": "^6.0.1",
+    "express": "latest",
+    "semver": "^7.8.4"
   },
   "devDependencies": {
+    "@types/archiver": "^8.0.0",
+    "@types/ejs": "^3.1.5",
     "@types/express": "latest",
     "@types/node": "latest",
+    "@types/semver": "^7.7.1",
     "@types/supertest": "latest",
+    "jszip": "^3.10.1",
     "supertest": "latest",
     "tsx": "latest",
-    "vitest": "latest"
+    "vitest": "^4.1.9"
   }
 }

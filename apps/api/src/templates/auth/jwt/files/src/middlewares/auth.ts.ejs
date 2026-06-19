@@ -1,0 +1,23 @@
+<% if (isTypeScript) { %>
+    import type { NextFunction, Request, Response } from 'express';
+    
+    import { verifyToken } from '../lib/jwt.js';
+    
+    export function authMiddleware(request: Request, response: Response, next: NextFunction): void {
+      const authorization = request.headers.authorization;
+    
+      if (!authorization?.startsWith('Bearer ')) {
+        response.status(401).json({ error: 'Unauthorized' });
+        return;
+      }
+    
+      const token = authorization.replace('Bearer ', '');
+    
+      try {
+        verifyToken(token);
+        next();
+      } catch {
+        response.status(401).json({ error: 'Unauthorized' });
+      }
+    }
+    <% } %>

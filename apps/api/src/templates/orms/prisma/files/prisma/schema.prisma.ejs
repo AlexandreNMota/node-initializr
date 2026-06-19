@@ -1,0 +1,8 @@
+generator client {
+    provider = "prisma-client-js"
+  }
+  
+  datasource db {
+    provider = "<%= database === 'mysql' ? 'mysql' : database === 'sqlite' ? 'sqlite' : database === 'mongodb' ? 'mongodb' : 'postgresql' %>"
+    url      = env("DATABASE_URL")
+  }
