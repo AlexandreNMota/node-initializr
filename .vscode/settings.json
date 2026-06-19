@@ -6,7 +6,15 @@
       "changeProcessCWD": true
     },
     {
+      "directory": "apps/api",
+      "changeProcessCWD": true
+    },
+    {
       "directory": "apps/web",
+      "changeProcessCWD": true
+    },
+    {
+      "directory": "packages/shared",
       "changeProcessCWD": true
     }
   ]

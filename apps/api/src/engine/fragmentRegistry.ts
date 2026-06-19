@@ -15,7 +15,7 @@ type FragmentRegistryEntry = {
   path: string;
   priority: number;
   manifest: Fragment['manifest'];
-}
+};
 
 function createFixturePath(name: string): string {
   return path.join(fixturesDirPath, name);
