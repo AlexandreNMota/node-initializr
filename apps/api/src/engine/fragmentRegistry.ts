@@ -37,9 +37,22 @@ export const fragmentRegistry = {
 
   'frameworks/express': {
     id: 'frameworks/express',
-    path: createFixturePath('frameworks-express'),
+    path: createTemplatePath('frameworks', 'express'),
     priority: 20,
-    manifest: { id: 'frameworks/express' },
+    manifest: {
+      id: 'frameworks/express',
+      dependencies: {
+        express: '4.19.2',
+      },
+      devDependencies: {
+        '@types/express': '4.17.21',
+      },
+      scripts: {
+        dev: 'tsx watch src/server.ts',
+        build: 'tsc',
+        start: 'node dist/server.js',
+      },
+    },
   },
   'frameworks/fastify': {
     id: 'frameworks/fastify',

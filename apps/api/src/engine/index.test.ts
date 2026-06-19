@@ -93,4 +93,42 @@ describe('generateProject', () => {
     expect(zip.file('.env.example')).toBeDefined();
     expect(zip.file('tsconfig.json')).toBeNull();
   });
+
+  it('deve incluir arquivos Express TypeScript no zip gerado', async () => {
+    const zipBuffer = await generateProject(validConfig);
+    const zip = await JSZip.loadAsync(zipBuffer);
+
+    expect(zip.file('src/app.ts')).toBeDefined();
+    expect(zip.file('src/server.ts')).toBeDefined();
+    expect(zip.file('src/routes/index.ts')).toBeDefined();
+  });
+
+  it('deve incluir arquivos Express JavaScript quando language e javascript', async () => {
+    const zipBuffer = await generateProject({
+      ...validConfig,
+      language: 'javascript',
+    });
+    const zip = await JSZip.loadAsync(zipBuffer);
+
+    expect(zip.file('src/app.js')).toBeDefined();
+    expect(zip.file('src/server.js')).toBeDefined();
+    expect(zip.file('src/routes/index.js')).toBeDefined();
+    expect(zip.file('src/app.ts')).toBeNull();
+  });
+
+  it('deve incluir express no package.json gerado', async () => {
+    const zipBuffer = await generateProject(validConfig);
+    const zip = await JSZip.loadAsync(zipBuffer);
+    const packageJsonContent = await zip.file('package.json')?.async('string');
+
+    expect(packageJsonContent).toBeDefined();
+
+    const packageJson = JSON.parse(packageJsonContent ?? '{}') as {
+      dependencies: Record<string, string>;
+      devDependencies: Record<string, string>;
+    };
+
+    expect(packageJson.dependencies.express).toBe('4.19.2');
+    expect(packageJson.devDependencies['@types/express']).toBe('4.17.21');
+  });
 });
