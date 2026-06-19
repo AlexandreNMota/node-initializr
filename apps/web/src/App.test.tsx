@@ -1,12 +1,20 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import App from './App';
 import { useConfigStore } from './store/configStore';
-
+const generateMock = vi.fn();
+vi.mock('./hooks/useGenerate', () => ({
+  useGenerate: () => ({
+    generate: generateMock,
+    isLoading: false,
+    error: null,
+  }),
+}));
 describe('App', () => {
   beforeEach(() => {
     useConfigStore.getState().resetConfig();
+    generateMock.mockReset();
   });
 
   it('renderiza a tela principal', () => {
@@ -141,14 +149,14 @@ describe('App', () => {
     expect(
       screen.getByText('BullMQ requires Redis. Enable Redis in Dependencies.'),
     ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Redis/ })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByRole('button', { name: /^Redis/ })).toHaveAttribute('aria-pressed', 'false');
   });
 
   it('remove aviso de BullMQ ao selecionar Redis', () => {
     render(<App />);
 
     fireEvent.click(screen.getByRole('button', { name: /BullMQ/ }));
-    fireEvent.click(screen.getByRole('button', { name: /Redis/ }));
+    fireEvent.click(screen.getByRole('button', { name: /^Redis/ }));
 
     expect(useConfigStore.getState().config.dependencies).toContain('redis');
     expect(
@@ -174,5 +182,45 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('button', { name: /Docker/ }));
 
     expect(useConfigStore.getState().config.dependencies).not.toContain('docker');
+  });
+
+  it('desabilita Generate quando name e invalido', () => {
+    render(<App />);
+
+    fireEvent.change(screen.getByLabelText('Project name'), {
+      target: {
+        value: 'Projeto Invalido',
+      },
+    });
+
+    expect(screen.getByRole('button', { name: 'Generate & Download' })).toBeDisabled();
+    expect(screen.getByText('Fix the project name before generating.')).toBeInTheDocument();
+  });
+
+  it('desabilita Generate quando ha erro de compatibilidade', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: /BullMQ/ }));
+
+    expect(screen.getByRole('button', { name: 'Generate & Download' })).toBeDisabled();
+    expect(screen.getByText('Resolve compatibility issues before generating.')).toBeInTheDocument();
+  });
+
+  it('chama generate com a config atual', () => {
+    render(<App />);
+
+    fireEvent.change(screen.getByLabelText('Project name'), {
+      target: {
+        value: 'api-produto',
+      },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Generate & Download' }));
+
+    expect(generateMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'api-produto',
+      }),
+    );
   });
 });

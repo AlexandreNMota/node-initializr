@@ -5,7 +5,7 @@ import { Label } from './components/ui/label';
 import { useConfigStore } from './store/configStore';
 import type { GenerateConfig } from '@node-initializr/shared';
 import { checkCompatibility } from './lib/compatibility';
-
+import { useGenerate } from './hooks/useGenerate';
 const PACKAGE_MANAGERS = ['npm', 'pnpm', 'yarn'] as const;
 const FRAMEWORKS = [
   { value: 'express', label: 'Express', description: 'Minimal HTTP server' },
@@ -109,7 +109,13 @@ function App() {
   const compatibilityErrors = checkCompatibility(config);
   const hasBullMqWithoutRedis =
     config.messaging === 'bullmq' && !config.dependencies.includes('redis');
+  const { generate, isLoading, error } = useGenerate();
+  const hasCompatibilityErrors = compatibilityErrors.length > 0;
+  const isGenerateDisabled = !isNameValid || hasCompatibilityErrors || isLoading;
 
+  async function handleGenerate(): Promise<void> {
+    await generate(config);
+  }
   return (
     <main className="min-h-screen bg-slate-100 text-slate-950">
       <div className="grid min-h-screen lg:grid-cols-[minmax(0,1fr)_440px]">
@@ -537,6 +543,37 @@ function App() {
                   })}
                 </div>
               </fieldset>
+            </section>
+            <section className="mt-5 rounded-lg border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-950">Generate</h2>
+                  <p className="mt-1 text-sm text-slate-600">
+                    Download a ready-to-run project as a zip file.
+                  </p>
+                </div>
+
+                <Button
+                  type="button"
+                  disabled={isGenerateDisabled}
+                  className="min-w-44"
+                  onClick={handleGenerate}
+                >
+                  {isLoading ? 'Generating...' : 'Generate & Download'}
+                </Button>
+              </div>
+
+              {!isNameValid ? (
+                <p className="mt-4 text-sm text-red-700">Fix the project name before generating.</p>
+              ) : null}
+
+              {hasCompatibilityErrors ? (
+                <p className="mt-4 text-sm text-red-700">
+                  Resolve compatibility issues before generating.
+                </p>
+              ) : null}
+
+              {error ? <p className="mt-4 text-sm text-red-700">{error}</p> : null}
             </section>
           </div>
         </section>
