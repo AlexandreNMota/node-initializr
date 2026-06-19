@@ -53,6 +53,29 @@ const ORMS = [
   { value: 'mongoose', label: 'Mongoose', description: 'MongoDB object modeling' },
 ] as const;
 
+const MESSAGING_OPTIONS = [
+  { value: 'none', label: 'None', description: 'No messaging queue' },
+  { value: 'rabbitmq', label: 'RabbitMQ', description: 'Message broker' },
+  { value: 'bullmq', label: 'BullMQ', description: 'Redis-backed jobs' },
+] as const;
+
+const AUTH_OPTIONS = [
+  { value: 'none', label: 'None', description: 'No auth layer' },
+  { value: 'jwt', label: 'JWT', description: 'Token-based authentication' },
+  { value: 'clerk', label: 'Clerk', description: 'Managed authentication' },
+] as const;
+
+const DEPENDENCY_OPTIONS = [
+  { value: 'redis', label: 'Redis', description: 'Cache and queues' },
+  { value: 'swagger', label: 'Swagger', description: 'API documentation' },
+  { value: 'jest', label: 'Jest', description: 'Unit testing setup' },
+  { value: 'docker', label: 'Docker', description: 'Container files' },
+  { value: 'github-actions', label: 'GitHub Actions', description: 'CI workflow' },
+  { value: 'eslint', label: 'ESLint', description: 'Linting setup' },
+  { value: 'pino', label: 'Pino', description: 'Structured logger' },
+  { value: 'winston', label: 'Winston', description: 'Logger alternative' },
+] as const;
+
 function isValidProjectName(name: string): boolean {
   return /^[a-z0-9-]+$/.test(name) && name.length > 0 && name.length <= 64;
 }
@@ -80,8 +103,12 @@ function isOrmDisabled(database: GenerateConfig['database'], orm: GenerateConfig
 function App() {
   const config = useConfigStore((state) => state.config);
   const setField = useConfigStore((state) => state.setField);
+  const addDependency = useConfigStore((state) => state.addDependency);
+  const removeDependency = useConfigStore((state) => state.removeDependency);
   const isNameValid = isValidProjectName(config.name);
   const compatibilityErrors = checkCompatibility(config);
+  const hasBullMqWithoutRedis =
+    config.messaging === 'bullmq' && !config.dependencies.includes('redis');
 
   return (
     <main className="min-h-screen bg-slate-100 text-slate-950">
@@ -379,6 +406,137 @@ function App() {
                   ))}
                 </div>
               ) : null}
+            </section>
+
+            <section className="mt-5 rounded-lg border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+              <div className="mb-6">
+                <h2 className="text-lg font-semibold text-slate-950">Integrations</h2>
+                <p className="mt-1 text-sm text-slate-600">
+                  Add authentication, messaging, and supporting dependencies.
+                </p>
+              </div>
+
+              <fieldset>
+                <legend className="mb-3 text-sm font-medium text-slate-700">Messaging</legend>
+
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {MESSAGING_OPTIONS.map((messaging) => {
+                    const isSelected = config.messaging === messaging.value;
+
+                    return (
+                      <button
+                        key={messaging.value}
+                        type="button"
+                        aria-pressed={isSelected}
+                        className={
+                          isSelected
+                            ? 'rounded-lg border border-slate-950 bg-slate-950 p-4 text-left text-white shadow-sm'
+                            : 'rounded-lg border border-slate-200 bg-white p-4 text-left text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50'
+                        }
+                        onClick={() => setField('messaging', messaging.value)}
+                      >
+                        <span className="block text-sm font-semibold">{messaging.label}</span>
+                        <span
+                          className={
+                            isSelected
+                              ? 'mt-1 block text-sm text-slate-300'
+                              : 'mt-1 block text-sm text-slate-500'
+                          }
+                        >
+                          {messaging.description}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {hasBullMqWithoutRedis ? (
+                  <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                    BullMQ requires Redis. Enable Redis in Dependencies.
+                  </div>
+                ) : null}
+              </fieldset>
+
+              <fieldset className="mt-6">
+                <legend className="mb-3 text-sm font-medium text-slate-700">Authentication</legend>
+
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {AUTH_OPTIONS.map((auth) => {
+                    const isSelected = config.auth === auth.value;
+
+                    return (
+                      <button
+                        key={auth.value}
+                        type="button"
+                        aria-pressed={isSelected}
+                        className={
+                          isSelected
+                            ? 'rounded-lg border border-blue-700 bg-blue-700 p-4 text-left text-white shadow-sm'
+                            : 'rounded-lg border border-slate-200 bg-white p-4 text-left text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50'
+                        }
+                        onClick={() => setField('auth', auth.value)}
+                      >
+                        <span className="block text-sm font-semibold">{auth.label}</span>
+                        <span
+                          className={
+                            isSelected
+                              ? 'mt-1 block text-sm text-blue-100'
+                              : 'mt-1 block text-sm text-slate-500'
+                          }
+                        >
+                          {auth.description}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </fieldset>
+
+              <fieldset className="mt-6">
+                <legend className="mb-3 text-sm font-medium text-slate-700">Dependencies</legend>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {DEPENDENCY_OPTIONS.map((dependency) => {
+                    const isSelected = config.dependencies.includes(dependency.value);
+                    const isRedisSuggestion = dependency.value === 'redis' && hasBullMqWithoutRedis;
+
+                    return (
+                      <button
+                        key={dependency.value}
+                        type="button"
+                        aria-pressed={isSelected}
+                        className={
+                          isSelected
+                            ? 'rounded-lg border border-blue-700 bg-blue-700 p-4 text-left text-white shadow-sm'
+                            : isRedisSuggestion
+                              ? 'rounded-lg border border-amber-300 bg-amber-50 p-4 text-left text-amber-900 shadow-sm'
+                              : 'rounded-lg border border-slate-200 bg-white p-4 text-left text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50'
+                        }
+                        onClick={() => {
+                          if (isSelected) {
+                            removeDependency(dependency.value);
+                          } else {
+                            addDependency(dependency.value);
+                          }
+                        }}
+                      >
+                        <span className="block text-sm font-semibold">{dependency.label}</span>
+                        <span
+                          className={
+                            isSelected
+                              ? 'mt-1 block text-sm text-blue-100'
+                              : isRedisSuggestion
+                                ? 'mt-1 block text-sm text-amber-800'
+                                : 'mt-1 block text-sm text-slate-500'
+                          }
+                        >
+                          {isRedisSuggestion ? 'Required for BullMQ' : dependency.description}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </fieldset>
             </section>
           </div>
         </section>

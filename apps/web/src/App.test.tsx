@@ -124,4 +124,55 @@ describe('App', () => {
 
     expect(screen.getByRole('button', { name: /Drizzle/ })).toBeDisabled();
   });
+
+  it('altera messaging ao clicar na opcao', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: /RabbitMQ/ }));
+
+    expect(useConfigStore.getState().config.messaging).toBe('rabbitmq');
+  });
+
+  it('mostra aviso quando BullMQ e selecionado sem Redis', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: /BullMQ/ }));
+
+    expect(
+      screen.getByText('BullMQ requires Redis. Enable Redis in Dependencies.'),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Redis/ })).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('remove aviso de BullMQ ao selecionar Redis', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: /BullMQ/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Redis/ }));
+
+    expect(useConfigStore.getState().config.dependencies).toContain('redis');
+    expect(
+      screen.queryByText('BullMQ requires Redis. Enable Redis in Dependencies.'),
+    ).not.toBeInTheDocument();
+  });
+
+  it('altera auth ao clicar na opcao', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: /^JWT/ }));
+
+    expect(useConfigStore.getState().config.auth).toBe('jwt');
+  });
+
+  it('adiciona e remove dependency ao clicar na opcao', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Docker/ }));
+
+    expect(useConfigStore.getState().config.dependencies).toContain('docker');
+
+    fireEvent.click(screen.getByRole('button', { name: /Docker/ }));
+
+    expect(useConfigStore.getState().config.dependencies).not.toContain('docker');
+  });
 });
