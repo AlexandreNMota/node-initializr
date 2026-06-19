@@ -34,6 +34,9 @@ importers:
       '@node-initializr/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      ejs:
+        specifier: ^6.0.1
+        version: 6.0.1
       express:
         specifier: latest
         version: 5.2.1
@@ -41,6 +44,9 @@ importers:
         specifier: ^7.8.4
         version: 7.8.4
     devDependencies:
+      '@types/ejs':
+        specifier: ^3.1.5
+        version: 3.1.5
       '@types/express':
         specifier: latest
         version: 5.0.6
@@ -2104,6 +2110,12 @@ packages:
         integrity: sha512-c9h9dVVMigMPc4bwTvC5dxqtqJZwQPePsWjPlpSOnojbor6pGqdk541lfA7AqFQr5pB1BRdq0juY9db81BwyFw==,
       }
 
+  '@types/ejs@3.1.5':
+    resolution:
+      {
+        integrity: sha512-nv+GSx77ZtXiJzwKdsASqi+YQ5Z7vwHsTP0JY2SiQgjGckkBRKZnk8nIM+7oUZ1VCtuTz0+By4qVR7fqzp/Dfg==,
+      }
+
   '@types/esrecurse@4.3.1':
     resolution:
       {
@@ -2872,6 +2884,14 @@ packages:
       {
         integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==,
       }
+
+  ejs@6.0.1:
+    resolution:
+      {
+        integrity: sha512-UaaM14yby8U3k02ihS1Bmj5Kz2d7CCQM1scxpgs4Mhkq8F1wR2gl3+Ts4h5Ne4Mnt7M9m4Dw7jsuMr3+xO4vZA==,
+      }
+    engines: { node: '>=0.12.18' }
+    hasBin: true
 
   electron-to-chromium@1.5.376:
     resolution:
@@ -6435,6 +6455,8 @@ snapshots:
 
   '@types/deep-eql@4.0.2': {}
 
+  '@types/ejs@3.1.5': {}
+
   '@types/esrecurse@4.3.1': {}
 
   '@types/estree@1.0.9': {}
@@ -6937,6 +6959,8 @@ snapshots:
       gopd: 1.2.0
 
   ee-first@1.1.1: {}
+
+  ejs@6.0.1: {}
 
   electron-to-chromium@1.5.376: {}
 
