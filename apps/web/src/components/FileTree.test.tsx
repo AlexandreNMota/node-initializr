@@ -19,6 +19,40 @@ const baseConfig: GenerateConfig = {
 };
 
 describe('buildFileTree', () => {
+  it('deve refletir arquitetura clean', () => {
+    const tree = buildFileTree({
+      ...baseConfig,
+      architecture: 'clean',
+    });
+
+    const src = tree.find((node) => node.name === 'src');
+
+    expect(src?.children).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: 'domain' }),
+        expect.objectContaining({ name: 'application' }),
+        expect.objectContaining({ name: 'infrastructure' }),
+      ]),
+    );
+  });
+
+  it('deve refletir arquitetura mvc', () => {
+    const tree = buildFileTree({
+      ...baseConfig,
+      architecture: 'mvc',
+    });
+
+    const src = tree.find((node) => node.name === 'src');
+
+    expect(src?.children).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: 'controllers' }),
+        expect.objectContaining({ name: 'models' }),
+        expect.objectContaining({ name: 'views' }),
+      ]),
+    );
+  });
+
   it('deve agrupar arquivos de lib em um unico diretorio', () => {
     const tree = buildFileTree({
       ...baseConfig,

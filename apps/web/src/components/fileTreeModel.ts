@@ -12,6 +12,7 @@ export function buildFileTree(config: GenerateConfig): TreeNode[] {
     createFile(`app.${extension}`),
     createFile(`server.${extension}`),
     createDirectory('routes', [createFile(`index.${extension}`)]),
+    ...createArchitectureDirectories(config.architecture),
   ];
 
   const libChildren: TreeNode[] = [];
@@ -65,4 +66,20 @@ function createDirectory(name: string, children: TreeNode[] = []): TreeNode {
     type: 'directory',
     children,
   };
+}
+
+function createArchitectureDirectories(architecture: GenerateConfig['architecture']): TreeNode[] {
+  if (architecture === 'clean') {
+    return [
+      createDirectory('domain'),
+      createDirectory('application'),
+      createDirectory('infrastructure'),
+    ];
+  }
+
+  if (architecture === 'mvc') {
+    return [createDirectory('controllers'), createDirectory('models'), createDirectory('views')];
+  }
+
+  return [createDirectory('modules')];
 }

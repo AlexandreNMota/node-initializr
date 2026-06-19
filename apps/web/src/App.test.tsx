@@ -78,4 +78,15 @@ describe('App', () => {
     expect(screen.getByText('app.js')).toBeInTheDocument();
     expect(screen.queryByText('app.ts')).not.toBeInTheDocument();
   });
+
+  it('altera arquitetura e atualiza o FileTree', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Clean Architecture/ }));
+
+    expect(useConfigStore.getState().config.architecture).toBe('clean');
+    expect(screen.getByText('domain')).toBeInTheDocument();
+    expect(screen.getByText('application')).toBeInTheDocument();
+    expect(screen.getByText('infrastructure')).toBeInTheDocument();
+  });
 });

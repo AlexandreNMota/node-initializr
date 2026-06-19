@@ -17,6 +17,24 @@ const LANGUAGES = [
   { value: 'javascript', label: 'JavaScript', description: 'Plain Node.js project' },
 ] as const;
 
+const ARCHITECTURES = [
+  {
+    value: 'modular',
+    label: 'Modular Monolith',
+    description: 'Feature modules in a single deployable app.',
+  },
+  {
+    value: 'clean',
+    label: 'Clean Architecture',
+    description: 'Domain, application, and infrastructure layers.',
+  },
+  {
+    value: 'mvc',
+    label: 'MVC',
+    description: 'Controllers, models, and views separated by role.',
+  },
+] as const;
+
 function isValidProjectName(name: string): boolean {
   return /^[a-z0-9-]+$/.test(name) && name.length > 0 && name.length <= 64;
 }
@@ -181,6 +199,46 @@ function App() {
                   })}
                 </div>
               </fieldset>
+            </section>
+
+            <section className="mt-5 rounded-lg border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+              <div className="mb-6">
+                <h2 className="text-lg font-semibold text-slate-950">Architecture</h2>
+                <p className="mt-1 text-sm text-slate-600">
+                  Shape the folders generated inside src.
+                </p>
+              </div>
+
+              <div className="grid gap-3">
+                {ARCHITECTURES.map((architecture) => {
+                  const isSelected = config.architecture === architecture.value;
+
+                  return (
+                    <button
+                      key={architecture.value}
+                      type="button"
+                      aria-pressed={isSelected}
+                      className={
+                        isSelected
+                          ? 'rounded-lg border border-slate-950 bg-slate-950 p-4 text-left text-white shadow-sm'
+                          : 'rounded-lg border border-slate-200 bg-white p-4 text-left text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50'
+                      }
+                      onClick={() => setField('architecture', architecture.value)}
+                    >
+                      <span className="block text-sm font-semibold">{architecture.label}</span>
+                      <span
+                        className={
+                          isSelected
+                            ? 'mt-1 block text-sm text-slate-300'
+                            : 'mt-1 block text-sm text-slate-500'
+                        }
+                      >
+                        {architecture.description}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </section>
           </div>
         </section>
