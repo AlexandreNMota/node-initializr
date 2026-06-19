@@ -1,4 +1,4 @@
-﻿import type { GenerateConfig } from '@node-initializr/shared';
+import type { GenerateConfig } from '@node-initializr/shared';
 import JSZip from 'jszip';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -130,6 +130,23 @@ describe('generateProject', () => {
 
     expect(packageJson.dependencies.express).toBe('4.19.2');
     expect(packageJson.devDependencies['@types/express']).toBe('4.17.21');
+  });
+  it('deve incluir ferramentas TypeScript usadas pelos scripts no package.json gerado', async () => {
+    const zipBuffer = await generateProject(validConfig);
+    const zip = await JSZip.loadAsync(zipBuffer);
+    const packageJsonContent = await zip.file('package.json')?.async('string');
+
+    expect(packageJsonContent).toBeDefined();
+
+    const packageJson = JSON.parse(packageJsonContent ?? '{}') as {
+      devDependencies: Record<string, string>;
+      scripts: Record<string, string>;
+    };
+
+    expect(packageJson.devDependencies.typescript).toBe('5.5.4');
+    expect(packageJson.devDependencies.tsx).toBe('4.19.2');
+    expect(packageJson.scripts.dev).toContain('tsx');
+    expect(packageJson.scripts.build).toBe('tsc');
   });
 
   it('deve incluir arquivos Prisma TypeScript no zip gerado', async () => {

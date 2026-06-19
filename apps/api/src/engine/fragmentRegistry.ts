@@ -26,13 +26,42 @@ export const fragmentRegistry = {
     id: 'base/typescript',
     path: createTemplatePath('base', 'typescript'),
     priority: 10,
-    manifest: { id: 'base/typescript' },
+    manifest: {
+      id: 'base/typescript',
+      devDependencies: {
+        typescript: '5.5.4',
+        tsx: '4.19.2',
+      },
+      scripts: {
+        dev: 'tsx watch src/server.ts',
+        build: 'tsc',
+        start: 'node dist/server.js',
+      },
+      envVars: [
+        {
+          key: 'PORT',
+          example: '3000',
+          description: 'Porta HTTP da aplicacao',
+          required: true,
+        },
+      ],
+    },
   },
   'base/javascript': {
     id: 'base/javascript',
     path: createTemplatePath('base', 'javascript'),
     priority: 10,
-    manifest: { id: 'base/javascript' },
+    manifest: {
+      id: 'base/javascript',
+      envVars: [
+        {
+          key: 'PORT',
+          example: '3000',
+          description: 'Porta HTTP da aplicacao',
+          required: true,
+        },
+      ],
+    },
   },
 
   'frameworks/express': {
