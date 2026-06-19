@@ -5,6 +5,17 @@ import { Label } from './components/ui/label';
 import { useConfigStore } from './store/configStore';
 
 const PACKAGE_MANAGERS = ['npm', 'pnpm', 'yarn'] as const;
+const FRAMEWORKS = [
+  { value: 'express', label: 'Express', description: 'Minimal HTTP server' },
+  { value: 'fastify', label: 'Fastify', description: 'High-performance API' },
+  { value: 'nestjs', label: 'NestJS', description: 'Structured application framework' },
+  { value: 'hono', label: 'Hono', description: 'Small web framework' },
+] as const;
+
+const LANGUAGES = [
+  { value: 'typescript', label: 'TypeScript', description: 'Typed Node.js project' },
+  { value: 'javascript', label: 'JavaScript', description: 'Plain Node.js project' },
+] as const;
 
 function isValidProjectName(name: string): boolean {
   return /^[a-z0-9-]+$/.test(name) && name.length > 0 && name.length <= 64;
@@ -87,6 +98,85 @@ function App() {
                       >
                         {packageManager}
                       </Button>
+                    );
+                  })}
+                </div>
+              </fieldset>
+            </section>
+
+            <section className="mt-5 rounded-lg border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+              <div className="mb-6">
+                <h2 className="text-lg font-semibold text-slate-950">Stack</h2>
+                <p className="mt-1 text-sm text-slate-600">
+                  Choose the runtime framework and source language.
+                </p>
+              </div>
+
+              <fieldset>
+                <legend className="mb-3 text-sm font-medium text-slate-700">Framework</legend>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {FRAMEWORKS.map((framework) => {
+                    const isSelected = config.framework === framework.value;
+
+                    return (
+                      <button
+                        key={framework.value}
+                        type="button"
+                        aria-pressed={isSelected}
+                        className={
+                          isSelected
+                            ? 'rounded-lg border border-slate-950 bg-slate-950 p-4 text-left text-white shadow-sm'
+                            : 'rounded-lg border border-slate-200 bg-white p-4 text-left text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50'
+                        }
+                        onClick={() => setField('framework', framework.value)}
+                      >
+                        <span className="block text-sm font-semibold">{framework.label}</span>
+                        <span
+                          className={
+                            isSelected
+                              ? 'mt-1 block text-sm text-slate-300'
+                              : 'mt-1 block text-sm text-slate-500'
+                          }
+                        >
+                          {framework.description}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </fieldset>
+
+              <fieldset className="mt-6">
+                <legend className="mb-3 text-sm font-medium text-slate-700">Language</legend>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {LANGUAGES.map((language) => {
+                    const isSelected = config.language === language.value;
+
+                    return (
+                      <button
+                        key={language.value}
+                        type="button"
+                        aria-pressed={isSelected}
+                        className={
+                          isSelected
+                            ? 'rounded-lg border border-blue-700 bg-blue-700 p-4 text-left text-white shadow-sm'
+                            : 'rounded-lg border border-slate-200 bg-white p-4 text-left text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50'
+                        }
+                        onClick={() => setField('language', language.value)}
+                      >
+                        <span className="block text-sm font-semibold">{language.label}</span>
+                        <span
+                          className={
+                            isSelected
+                              ? 'mt-1 block text-sm text-blue-100'
+                              : 'mt-1 block text-sm text-slate-500'
+                          }
+                        >
+                          {language.description}
+                        </span>
+                      </button>
                     );
                   })}
                 </div>

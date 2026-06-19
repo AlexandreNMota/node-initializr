@@ -60,4 +60,22 @@ describe('App', () => {
     expect(screen.getByText('package.json')).toBeInTheDocument();
     expect(screen.getByText('.env.example')).toBeInTheDocument();
   });
+
+  it('altera framework ao clicar na opcao', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Fastify/ }));
+
+    expect(useConfigStore.getState().config.framework).toBe('fastify');
+  });
+
+  it('altera linguagem e atualiza o FileTree', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: /JavaScript/ }));
+
+    expect(useConfigStore.getState().config.language).toBe('javascript');
+    expect(screen.getByText('app.js')).toBeInTheDocument();
+    expect(screen.queryByText('app.ts')).not.toBeInTheDocument();
+  });
 });
