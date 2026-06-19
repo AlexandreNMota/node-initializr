@@ -72,4 +72,25 @@ describe('generateProject', () => {
       code: 'GENERATION_FAILED',
     });
   });
+
+  it('deve incluir arquivos base typescript no zip gerado', async () => {
+    const zipBuffer = await generateProject(validConfig);
+    const zip = await JSZip.loadAsync(zipBuffer);
+
+    expect(zip.file('tsconfig.json')).toBeDefined();
+    expect(zip.file('.gitignore')).toBeDefined();
+    expect(zip.file('.env.example')).toBeDefined();
+  });
+
+  it('deve incluir arquivos base javascript quando language e javascript', async () => {
+    const zipBuffer = await generateProject({
+      ...validConfig,
+      language: 'javascript',
+    });
+    const zip = await JSZip.loadAsync(zipBuffer);
+
+    expect(zip.file('.gitignore')).toBeDefined();
+    expect(zip.file('.env.example')).toBeDefined();
+    expect(zip.file('tsconfig.json')).toBeNull();
+  });
 });

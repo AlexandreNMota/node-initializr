@@ -6,7 +6,7 @@ import type { Fragment } from './types.js';
 const currentFilePath = fileURLToPath(import.meta.url);
 const currentDirPath = path.dirname(currentFilePath);
 const fixturesDirPath = path.join(currentDirPath, '__fixtures__');
-
+const templatesDirPath = path.join(currentDirPath, '..', 'templates');
 // type FragmentRegistryEntry = Omit<Fragment, 'manifest'> & {
 //   manifest: Fragment['manifest'];
 // };
@@ -24,13 +24,13 @@ function createFixturePath(name: string): string {
 export const fragmentRegistry = {
   'base/typescript': {
     id: 'base/typescript',
-    path: createFixturePath('base-typescript'),
+    path: createTemplatePath('base', 'typescript'),
     priority: 10,
     manifest: { id: 'base/typescript' },
   },
   'base/javascript': {
     id: 'base/javascript',
-    path: createFixturePath('base-javascript'),
+    path: createTemplatePath('base', 'javascript'),
     priority: 10,
     manifest: { id: 'base/javascript' },
   },
@@ -149,3 +149,6 @@ export const fragmentRegistry = {
 } satisfies Record<string, FragmentRegistryEntry>;
 
 export type FragmentId = keyof typeof fragmentRegistry;
+function createTemplatePath(...segments: string[]): string {
+  return path.join(templatesDirPath, ...segments);
+}

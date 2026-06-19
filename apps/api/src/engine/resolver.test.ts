@@ -19,6 +19,15 @@ const baseConfig: GenerateConfig = {
 };
 
 describe('Resolver - fragmento base', () => {
+  it('fragmentos base devem apontar para templates reais', () => {
+    const fragments = resolveFragments(baseConfig);
+    const base = fragments.find((fragment) => fragment.id === 'base/typescript');
+
+    expect(base?.path).toContain('templates');
+    expect(base?.path).toContain('base');
+    expect(base?.path).toContain('typescript');
+  });
+
   it('deve incluir base/typescript para language typescript', () => {
     const fragments = resolveFragments(baseConfig);
 

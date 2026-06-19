@@ -1,0 +1,16 @@
+{
+  "id": "base/javascript",
+  "scripts": {
+    "dev": "node src/server.js",
+    "build": "echo \"No build step required\"",
+    "start": "node src/server.js"
+  },
+  "envVars": [
+    {
+      "key": "PORT",
+      "example": "3000",
+      "description": "Porta HTTP da aplicacao",
+      "required": true
+    }
+  ]
+}
