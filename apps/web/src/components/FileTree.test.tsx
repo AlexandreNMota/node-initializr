@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import type { GenerateConfig } from '@node-initializr/shared';
 import { describe, expect, it } from 'vitest';
 
@@ -153,6 +153,21 @@ describe('FileTree', () => {
     expect(screen.getByText('docker-compose.yml')).toBeInTheDocument();
   });
 
+  it('deve fechar e abrir pastas ao clicar no diretorio', () => {
+    render(<FileTree config={baseConfig} />);
+
+    expect(screen.getByText('app.ts')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /src/ }));
+
+    expect(screen.queryByText('app.ts')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /src/ })).toHaveAttribute('aria-expanded', 'false');
+
+    fireEvent.click(screen.getByRole('button', { name: /src/ }));
+
+    expect(screen.getByText('app.ts')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /src/ })).toHaveAttribute('aria-expanded', 'true');
+  });
   it('deve renderizar extensoes conforme linguagem', () => {
     render(
       <FileTree
