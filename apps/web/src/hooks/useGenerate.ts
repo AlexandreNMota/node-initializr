@@ -41,19 +41,8 @@ export function useGenerate(): UseGenerateResult {
       }
 
       const blob = await response.blob();
-      const filename = `${config.name}.zip`;
 
-      const url = URL.createObjectURL(blob);
-      const anchor = document.createElement('a');
-
-      anchor.href = url;
-      anchor.download = filename;
-
-      document.body.appendChild(anchor);
-      anchor.click();
-      document.body.removeChild(anchor);
-
-      URL.revokeObjectURL(url);
+      triggerDownload(blob, `${config.name}.zip`);
     } catch {
       setError(GENERIC_ERROR_MESSAGE);
     } finally {
@@ -66,4 +55,17 @@ export function useGenerate(): UseGenerateResult {
     error,
     generate,
   };
+}
+export function triggerDownload(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+
+  anchor.href = url;
+  anchor.download = filename;
+
+  document.body.appendChild(anchor);
+  anchor.click();
+  document.body.removeChild(anchor);
+
+  URL.revokeObjectURL(url);
 }

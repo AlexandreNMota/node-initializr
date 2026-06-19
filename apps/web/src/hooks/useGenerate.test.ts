@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { GenerateConfig } from '@node-initializr/shared';
-import { useGenerate } from './useGenerate.ts';
+import { triggerDownload, useGenerate } from './useGenerate';
 
 const validConfig: GenerateConfig = {
   name: 'meu-projeto',
@@ -142,5 +142,32 @@ describe('useGenerate - erros', () => {
     });
 
     expect(result.current.isLoading).toBe(false);
+  });
+});
+
+describe('triggerDownload', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+
+    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:download-url');
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
+  });
+
+  it('deve criar link temporario e acionar click', () => {
+    const anchor = document.createElement('a');
+    const click = vi.spyOn(anchor, 'click').mockImplementation(() => undefined);
+    const appendChild = vi.spyOn(document.body, 'appendChild');
+    const removeChild = vi.spyOn(document.body, 'removeChild');
+
+    vi.spyOn(document, 'createElement').mockReturnValue(anchor);
+
+    triggerDownload(new Blob(['zip-content'], { type: 'application/zip' }), 'meu-projeto.zip');
+
+    expect(anchor.getAttribute('href')).toBe('blob:download-url');
+    expect(anchor.download).toBe('meu-projeto.zip');
+    expect(appendChild).toHaveBeenCalledWith(anchor);
+    expect(click).toHaveBeenCalled();
+    expect(removeChild).toHaveBeenCalledWith(anchor);
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:download-url');
   });
 });
