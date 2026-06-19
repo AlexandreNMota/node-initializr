@@ -8,118 +8,61 @@ export type TreeNode = {
 
 export function buildFileTree(config: GenerateConfig): TreeNode[] {
   const extension = config.language === 'typescript' ? 'ts' : 'js';
-
   const srcChildren: TreeNode[] = [
-    {
-      name: `app.${extension}`,
-      type: 'file',
-    },
-    {
-      name: `server.${extension}`,
-      type: 'file',
-    },
-    {
-      name: 'routes',
-      type: 'directory',
-      children: [
-        {
-          name: `index.${extension}`,
-          type: 'file',
-        },
-      ],
-    },
+    createFile(`app.${extension}`),
+    createFile(`server.${extension}`),
+    createDirectory('routes', [createFile(`index.${extension}`)]),
   ];
 
+  const libChildren: TreeNode[] = [];
+
   if (config.orm === 'prisma') {
-    srcChildren.push({
-      name: 'lib',
-      type: 'directory',
-      children: [
-        {
-          name: `prisma.${extension}`,
-          type: 'file',
-        },
-      ],
-    });
+    libChildren.push(createFile(`prisma.${extension}`));
   }
 
   if (config.auth === 'jwt') {
-    srcChildren.push(
-      {
-        name: 'lib',
-        type: 'directory',
-        children: [
-          {
-            name: `jwt.${extension}`,
-            type: 'file',
-          },
-        ],
-      },
-      {
-        name: 'middlewares',
-        type: 'directory',
-        children: [
-          {
-            name: `auth.${extension}`,
-            type: 'file',
-          },
-        ],
-      },
-    );
+    libChildren.push(createFile(`jwt.${extension}`));
+
+    srcChildren.push(createDirectory('middlewares', [createFile(`auth.${extension}`)]));
+  }
+
+  if (libChildren.length > 0) {
+    srcChildren.push(createDirectory('lib', libChildren));
   }
 
   const tree: TreeNode[] = [
-    {
-      name: 'src',
-      type: 'directory',
-      children: srcChildren,
-    },
-    {
-      name: 'package.json',
-      type: 'file',
-    },
-    {
-      name: '.env.example',
-      type: 'file',
-    },
-    {
-      name: '.gitignore',
-      type: 'file',
-    },
+    createDirectory('src', srcChildren),
+    createFile('package.json'),
+    createFile('.env.example'),
+    createFile('.gitignore'),
   ];
 
   if (config.language === 'typescript') {
-    tree.push({
-      name: 'tsconfig.json',
-      type: 'file',
-    });
+    tree.push(createFile('tsconfig.json'));
   }
 
   if (config.orm === 'prisma') {
-    tree.push({
-      name: 'prisma',
-      type: 'directory',
-      children: [
-        {
-          name: 'schema.prisma',
-          type: 'file',
-        },
-      ],
-    });
+    tree.push(createDirectory('prisma', [createFile('schema.prisma')]));
   }
 
   if (config.dependencies.includes('docker')) {
-    tree.push(
-      {
-        name: 'Dockerfile',
-        type: 'file',
-      },
-      {
-        name: 'docker-compose.yml',
-        type: 'file',
-      },
-    );
+    tree.push(createFile('Dockerfile'), createFile('docker-compose.yml'));
   }
 
   return tree;
+}
+
+function createFile(name: string): TreeNode {
+  return {
+    name,
+    type: 'file',
+  };
+}
+
+function createDirectory(name: string, children: TreeNode[] = []): TreeNode {
+  return {
+    name,
+    type: 'directory',
+    children,
+  };
 }

@@ -19,6 +19,26 @@ const baseConfig: GenerateConfig = {
 };
 
 describe('buildFileTree', () => {
+  it('deve agrupar arquivos de lib em um unico diretorio', () => {
+    const tree = buildFileTree({
+      ...baseConfig,
+      database: 'postgresql',
+      orm: 'prisma',
+      auth: 'jwt',
+    });
+
+    const src = tree.find((node) => node.name === 'src');
+    const libDirectories = src?.children?.filter((node) => node.name === 'lib') ?? [];
+    const lib = libDirectories[0];
+
+    expect(libDirectories).toHaveLength(1);
+    expect(lib?.children).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: 'prisma.ts' }),
+        expect.objectContaining({ name: 'jwt.ts' }),
+      ]),
+    );
+  });
   it('deve gerar estrutura base', () => {
     const tree = buildFileTree(baseConfig);
 
