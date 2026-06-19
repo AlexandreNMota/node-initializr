@@ -21,6 +21,8 @@ export function composePackageJson(
   config: GenerateConfig,
   fragments: Fragment[],
 ): PackageJsonShape {
+  assertNoDependencyTypeConflicts(fragments);
+
   return {
     name: config.name,
     version: '1.0.0',
@@ -41,6 +43,20 @@ function getMainEntry(config: GenerateConfig): string {
   }
 
   return 'src/server.js';
+}
+
+function assertNoDependencyTypeConflicts(fragments: Fragment[]): void {
+  for (const fragment of fragments) {
+    const dependencies = Object.keys(fragment.manifest.dependencies ?? {});
+    const devDependencies = new Set(Object.keys(fragment.manifest.devDependencies ?? {}));
+    const duplicatedDependency = dependencies.find((dependency) => devDependencies.has(dependency));
+
+    if (duplicatedDependency) {
+      throw new Error(
+        `Dependency ${duplicatedDependency} cannot be both dependency and devDependency.`,
+      );
+    }
+  }
 }
 
 function mergeDependencies(

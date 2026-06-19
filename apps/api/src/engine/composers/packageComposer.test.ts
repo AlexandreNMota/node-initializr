@@ -2,7 +2,7 @@ import type { GenerateConfig } from '@node-initializr/shared';
 import { describe, expect, it } from 'vitest';
 
 import type { Fragment } from '../types.js';
-import { composePackageJson, mergeVersions } from './packageComposer.ts';
+import { composePackageJson, mergeVersions } from './packageComposer.js';
 
 const baseConfig: GenerateConfig = {
   name: 'meu-projeto',
@@ -106,6 +106,31 @@ describe('PackageComposer - agregacao de dependencias', () => {
 
     expect(packageJson.dependencies.express).toBe('4.19.2');
   });
+});
+
+it('deve sanitizar prefixos ^ e ~ antes de agregar versoes', () => {
+  const fragments = [
+    makeFragment({
+      dependencies: { express: '^4.19.0' },
+      devDependencies: { typescript: '~5.5.0' },
+    }),
+  ];
+
+  const packageJson = composePackageJson(baseConfig, fragments);
+
+  expect(packageJson.dependencies.express).toBe('4.19.0');
+  expect(packageJson.devDependencies.typescript).toBe('5.5.0');
+});
+
+it('deve falhar quando a mesma lib aparece em dependencies e devDependencies no mesmo fragmento', () => {
+  const fragments = [
+    makeFragment({
+      dependencies: { typescript: '5.5.0' },
+      devDependencies: { typescript: '5.5.0' },
+    }),
+  ];
+
+  expect(() => composePackageJson(baseConfig, fragments)).toThrow('typescript');
 });
 
 describe('PackageComposer - scripts', () => {

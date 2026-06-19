@@ -4,7 +4,12 @@ import type { GenerateConfig } from '@node-initializr/shared';
 import { describe, expect, it } from 'vitest';
 
 import type { Fragment } from '../types.js';
-import { buildEnvExample, renderFiles, stripEjsExtension } from './fileRenderer.js';
+import {
+  assertSafeGeneratedPath,
+  buildEnvExample,
+  renderFiles,
+  stripEjsExtension,
+} from './fileRenderer.js';
 
 const baseConfig: GenerateConfig = {
   name: 'meu-projeto',
@@ -245,5 +250,21 @@ describe('stripEjsExtension', () => {
 
   it('nao deve alterar path sem extensao .ejs', () => {
     expect(stripEjsExtension('src/app.ts')).toBe('src/app.ts');
+  });
+});
+
+describe('assertSafeGeneratedPath', () => {
+  it('deve rejeitar path traversal', () => {
+    expect(() => assertSafeGeneratedPath('../outside.ts')).toThrow('Unsafe generated file path');
+  });
+
+  it('deve rejeitar path absoluto', () => {
+    expect(() => assertSafeGeneratedPath('C:/temp/outside.ts')).toThrow(
+      'Unsafe generated file path',
+    );
+  });
+
+  it('deve aceitar path relativo seguro', () => {
+    expect(assertSafeGeneratedPath('src/app.ts')).toBe('src/app.ts');
   });
 });

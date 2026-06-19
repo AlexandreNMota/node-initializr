@@ -96,7 +96,9 @@ async function renderTemplateFile(
   });
 
   return {
-    path: normalizeGeneratedPath(stripEjsExtension(path.relative(filesDir, templatePath))),
+    path: assertSafeGeneratedPath(
+      normalizeGeneratedPath(stripEjsExtension(path.relative(filesDir, templatePath))),
+    ),
     content: rendered,
     encoding: 'utf-8',
   };
@@ -122,6 +124,17 @@ export function buildEnvExample(envVars: EnvVar[]): string {
 
 export function stripEjsExtension(filePath: string): string {
   return filePath.replace(/\.ejs$/, '');
+}
+
+export function assertSafeGeneratedPath(filePath: string): string {
+  const normalizedPath = normalizeGeneratedPath(filePath);
+  const segments = normalizedPath.split('/');
+
+  if (path.isAbsolute(filePath) || segments.includes('..')) {
+    throw new Error(`Unsafe generated file path: ${filePath}`);
+  }
+
+  return normalizedPath;
 }
 
 function normalizeGeneratedPath(filePath: string): string {
