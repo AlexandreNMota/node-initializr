@@ -75,9 +75,29 @@ export const fragmentRegistry = {
 
   'orms/prisma': {
     id: 'orms/prisma',
-    path: createFixturePath('orms-prisma'),
+    path: createTemplatePath('orms', 'prisma'),
     priority: 30,
-    manifest: { id: 'orms/prisma' },
+    manifest: {
+      id: 'orms/prisma',
+      dependencies: {
+        '@prisma/client': '5.14.0',
+      },
+      devDependencies: {
+        prisma: '5.14.0',
+      },
+      scripts: {
+        'db:migrate': 'prisma migrate dev',
+        'db:generate': 'prisma generate',
+      },
+      envVars: [
+        {
+          key: 'DATABASE_URL',
+          example: 'postgresql://postgres:postgres@localhost:5432/app',
+          description: 'String de conexao com o banco de dados',
+          required: true,
+        },
+      ],
+    },
   },
   'orms/typeorm': {
     id: 'orms/typeorm',

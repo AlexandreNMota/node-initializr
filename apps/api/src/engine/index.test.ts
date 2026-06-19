@@ -131,4 +131,62 @@ describe('generateProject', () => {
     expect(packageJson.dependencies.express).toBe('4.19.2');
     expect(packageJson.devDependencies['@types/express']).toBe('4.17.21');
   });
+
+  it('deve incluir arquivos Prisma TypeScript no zip gerado', async () => {
+    const zipBuffer = await generateProject(validConfig);
+    const zip = await JSZip.loadAsync(zipBuffer);
+
+    expect(zip.file('prisma/schema.prisma')).toBeDefined();
+    expect(zip.file('src/lib/prisma.ts')).toBeDefined();
+  });
+
+  it('deve incluir arquivos Prisma JavaScript quando language e javascript', async () => {
+    const zipBuffer = await generateProject({
+      ...validConfig,
+      language: 'javascript',
+    });
+    const zip = await JSZip.loadAsync(zipBuffer);
+
+    expect(zip.file('prisma/schema.prisma')).toBeDefined();
+    expect(zip.file('src/lib/prisma.js')).toBeDefined();
+    expect(zip.file('src/lib/prisma.ts')).toBeNull();
+  });
+
+  it('schema.prisma deve usar provider correto para mysql', async () => {
+    const zipBuffer = await generateProject({
+      ...validConfig,
+      database: 'mysql',
+    });
+    const zip = await JSZip.loadAsync(zipBuffer);
+    const schema = await zip.file('prisma/schema.prisma')?.async('string');
+
+    expect(schema).toContain('provider = "mysql"');
+  });
+
+  it('deve incluir Prisma no package.json gerado', async () => {
+    const zipBuffer = await generateProject(validConfig);
+    const zip = await JSZip.loadAsync(zipBuffer);
+    const packageJsonContent = await zip.file('package.json')?.async('string');
+
+    expect(packageJsonContent).toBeDefined();
+
+    const packageJson = JSON.parse(packageJsonContent ?? '{}') as {
+      dependencies: Record<string, string>;
+      devDependencies: Record<string, string>;
+      scripts: Record<string, string>;
+    };
+
+    expect(packageJson.dependencies['@prisma/client']).toBe('5.14.0');
+    expect(packageJson.devDependencies.prisma).toBe('5.14.0');
+    expect(packageJson.scripts['db:migrate']).toBe('prisma migrate dev');
+    expect(packageJson.scripts['db:generate']).toBe('prisma generate');
+  });
+
+  it('deve incluir DATABASE_URL no .env.example gerado', async () => {
+    const zipBuffer = await generateProject(validConfig);
+    const zip = await JSZip.loadAsync(zipBuffer);
+    const envExample = await zip.file('.env.example')?.async('string');
+
+    expect(envExample).toContain('DATABASE_URL=postgresql://postgres:postgres@localhost:5432/app');
+  });
 });
