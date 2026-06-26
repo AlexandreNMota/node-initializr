@@ -1,11 +1,16 @@
 <% if (!isTypeScript) { %>
     import express from 'express';
-    
+    <% if (dependencies.includes('swagger')) { %>
+        import { setupSwagger } from './docs/setupSwagger.js';
+        <% } %>
     import { router } from './routes/index.js';
     
     export const app = express();
     
     app.use(express.json());
+    <% if (dependencies.includes('swagger')) { %>
+        setupSwagger(app);
+        <% } %>
     
     app.use('/api', router);
     <% } %>

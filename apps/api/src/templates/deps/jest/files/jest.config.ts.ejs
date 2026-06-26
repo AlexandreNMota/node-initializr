@@ -1,0 +1,9 @@
+<% if (isTypeScript) { %>
+    export default {
+      testEnvironment: 'node',
+      transform: {
+        '^.+\\.(t|j)s$': ['ts-jest', { tsconfig: './tsconfig.json' }],
+      },
+      testMatch: ['**/*.test.ts'],
+    };
+    <% } %>

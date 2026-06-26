@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: <%= packageManager %>
+
+      - name: Install dependencies
+        run: <%= packageManager === 'npm' ? 'npm ci' : packageManager + ' install --frozen-lockfile' %>
+
+      <% if (dependencies.includes('eslint')) { %>
+      - name: Lint
+        run: <%= packageManager %> run lint
+      <% } %>
+
+      <% if (dependencies.includes('jest')) { %>
+      - name: Test
+        run: <%= packageManager %> test
+      <% } %>
+
+      <% if (language === 'typescript') { %>
+      - name: Build
+        run: <%= packageManager %> run build
+      <% } %>

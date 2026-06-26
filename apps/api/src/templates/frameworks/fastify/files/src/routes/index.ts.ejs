@@ -1,0 +1,9 @@
+<% if (isTypeScript) { %>
+    import type { FastifyInstance } from 'fastify';
+    
+    export function registerRoutes(app: FastifyInstance): void {
+      app.get('/api/health', async () => ({
+        status: 'ok',
+      }));
+    }
+    <% } %>

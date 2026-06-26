@@ -1,7 +1,6 @@
 import type { GenerateConfig } from '@node-initializr/shared';
 import JSZip from 'jszip';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-
 import { generateProject } from './index.js';
 
 const validConfig: GenerateConfig = {
@@ -17,6 +16,22 @@ const validConfig: GenerateConfig = {
   dependencies: ['docker', 'swagger'],
 };
 
+async function readZipEntries(zipBuffer: Buffer): Promise<Map<string, string>> {
+  const zip = await JSZip.loadAsync(zipBuffer);
+  const entries = new Map<string, string>();
+
+  await Promise.all(
+    Object.entries(zip.files).map(async ([fileName, file]) => {
+      if (file.dir) {
+        return;
+      }
+
+      entries.set(fileName, await file.async('string'));
+    }),
+  );
+
+  return entries;
+}
 describe('generateProject', () => {
   afterEach(() => {
     vi.doUnmock('./resolver.js');
@@ -251,5 +266,193 @@ describe('generateProject', () => {
 
     expect(envExample).toContain('JWT_SECRET=change-me');
     expect(envExample).toContain('JWT_EXPIRES_IN=1d');
+  });
+
+  it('deve gerar projeto Fastify com arquivos e dependencia corretos', async () => {
+    const zipBuffer = await generateProject({
+      ...validConfig,
+      framework: 'fastify',
+    });
+
+    const entries = await readZipEntries(zipBuffer);
+    const packageJson = JSON.parse(entries.get('package.json') ?? '{}') as {
+      dependencies?: Record<string, string>;
+    };
+
+    expect(entries.has('src/app.ts')).toBe(true);
+    expect(entries.has('src/server.ts')).toBe(true);
+    expect(entries.has('src/routes/index.ts')).toBe(true);
+    expect(entries.get('src/app.ts')).toContain("from 'fastify'");
+    expect(packageJson.dependencies?.fastify).toBe('4.28.1');
+  });
+
+  it('deve gerar projeto NestJS com arquivos e dependencias corretos', async () => {
+    const zipBuffer = await generateProject({
+      ...validConfig,
+      framework: 'nestjs',
+    });
+
+    const entries = await readZipEntries(zipBuffer);
+    const packageJson = JSON.parse(entries.get('package.json') ?? '{}') as {
+      dependencies?: Record<string, string>;
+      scripts?: Record<string, string>;
+    };
+
+    expect(entries.has('src/main.ts')).toBe(true);
+    expect(entries.has('src/app.module.ts')).toBe(true);
+    expect(entries.has('src/health.controller.ts')).toBe(true);
+    expect(entries.get('src/main.ts')).toContain('@nestjs/core');
+    expect(packageJson.dependencies?.['@nestjs/core']).toBe('10.3.10');
+    expect(packageJson.dependencies?.['@nestjs/common']).toBe('10.3.10');
+    expect(packageJson.dependencies?.['@nestjs/platform-express']).toBe('10.3.10');
+    expect(packageJson.dependencies?.['reflect-metadata']).toBe('0.2.2');
+    expect(packageJson.dependencies?.rxjs).toBe('7.8.1');
+    expect(packageJson.scripts?.dev).toBe('tsx watch src/main.ts');
+  });
+
+  it('deve gerar arquivos TypeORM e dependencias corretas', async () => {
+    const zipBuffer = await generateProject({
+      ...validConfig,
+      orm: 'typeorm',
+    });
+
+    const entries = await readZipEntries(zipBuffer);
+    const packageJson = JSON.parse(entries.get('package.json') ?? '{}') as {
+      dependencies?: Record<string, string>;
+    };
+
+    expect(entries.has('src/data-source.ts')).toBe(true);
+    expect(entries.get('src/data-source.ts')).toContain('DataSource');
+    expect(packageJson.dependencies?.typeorm).toBe('0.3.20');
+    expect(packageJson.dependencies?.['reflect-metadata']).toBe('0.2.2');
+  });
+
+  it('deve gerar arquivos Drizzle e dependencias corretas', async () => {
+    const zipBuffer = await generateProject({
+      ...validConfig,
+      orm: 'drizzle',
+    });
+
+    const entries = await readZipEntries(zipBuffer);
+    const packageJson = JSON.parse(entries.get('package.json') ?? '{}') as {
+      dependencies?: Record<string, string>;
+      devDependencies?: Record<string, string>;
+    };
+
+    expect(entries.has('src/lib/db.ts')).toBe(true);
+    expect(entries.has('src/db/schema.ts')).toBe(true);
+    expect(entries.has('drizzle.config.ts')).toBe(true);
+    expect(entries.get('src/lib/db.ts')).toContain('drizzle-orm/node-postgres');
+    expect(packageJson.dependencies?.['drizzle-orm']).toBe('0.31.4');
+    expect(packageJson.devDependencies?.['drizzle-kit']).toBe('0.22.8');
+  });
+
+  it('deve gerar arquivos Redis e dependencia correta', async () => {
+    const zipBuffer = await generateProject({
+      ...validConfig,
+      dependencies: ['redis'],
+    });
+
+    const entries = await readZipEntries(zipBuffer);
+    const packageJson = JSON.parse(entries.get('package.json') ?? '{}') as {
+      dependencies?: Record<string, string>;
+    };
+
+    expect(entries.has('src/lib/redis.ts')).toBe(true);
+    expect(entries.get('src/lib/redis.ts')).toContain('ioredis');
+    expect(entries.get('.env.example')).toContain('REDIS_URL=redis://localhost:6379');
+    expect(packageJson.dependencies?.ioredis).toBe('5.4.1');
+  });
+  it('deve gerar setup Jest JavaScript quando language e javascript', async () => {
+    const zipBuffer = await generateProject({
+      ...validConfig,
+      language: 'javascript',
+      dependencies: ['jest'],
+    });
+
+    const entries = await readZipEntries(zipBuffer);
+
+    expect(entries.has('jest.config.js')).toBe(true);
+    expect(entries.has('jest.config.ts')).toBe(false);
+    expect(entries.has('src/test/health.test.js')).toBe(true);
+  });
+
+  it('deve gerar setup Jest e dependencias corretas', async () => {
+    const zipBuffer = await generateProject({
+      ...validConfig,
+      dependencies: ['jest'],
+    });
+
+    const entries = await readZipEntries(zipBuffer);
+    const packageJson = JSON.parse(entries.get('package.json') ?? '{}') as {
+      devDependencies?: Record<string, string>;
+      scripts?: Record<string, string>;
+    };
+
+    expect(entries.has('jest.config.ts')).toBe(true);
+    expect(entries.has('src/test/health.test.ts')).toBe(true);
+    expect(packageJson.devDependencies?.jest).toBe('29.7.0');
+    expect(packageJson.devDependencies?.['ts-jest']).toBe('29.2.3');
+    expect(packageJson.devDependencies?.['@types/jest']).toBe('29.5.12');
+    expect(packageJson.scripts?.test).toBe('jest');
+  });
+
+  it('deve gerar setup ESLint e Prettier', async () => {
+    const zipBuffer = await generateProject({
+      ...validConfig,
+      dependencies: ['eslint'],
+    });
+
+    const entries = await readZipEntries(zipBuffer);
+    const packageJson = JSON.parse(entries.get('package.json') ?? '{}') as {
+      devDependencies?: Record<string, string>;
+      scripts?: Record<string, string>;
+    };
+
+    expect(entries.has('eslint.config.js')).toBe(true);
+    expect(entries.has('.prettierrc')).toBe(true);
+    expect(entries.get('eslint.config.js')).toContain('eslint-config-prettier');
+    expect(packageJson.devDependencies?.eslint).toBe('9.30.1');
+    expect(packageJson.devDependencies?.prettier).toBe('3.3.3');
+    expect(packageJson.scripts?.lint).toBe('eslint .');
+    expect(packageJson.scripts?.format).toBe('prettier . --write');
+  });
+
+  it('deve gerar setup Swagger para Express', async () => {
+    const zipBuffer = await generateProject({
+      ...validConfig,
+      dependencies: ['swagger'],
+    });
+
+    const entries = await readZipEntries(zipBuffer);
+    const packageJson = JSON.parse(entries.get('package.json') ?? '{}') as {
+      dependencies?: Record<string, string>;
+      devDependencies?: Record<string, string>;
+    };
+
+    expect(entries.has('src/docs/swagger.ts')).toBe(true);
+    expect(entries.has('src/docs/setupSwagger.ts')).toBe(true);
+    expect(entries.get('src/app.ts')).toContain('setupSwagger(app)');
+    expect(packageJson.dependencies?.['swagger-ui-express']).toBe('5.0.1');
+    expect(packageJson.devDependencies?.['@types/swagger-ui-express']).toBe('4.1.7');
+  });
+
+  it('deve gerar workflow GitHub Actions', async () => {
+    const zipBuffer = await generateProject({
+      ...validConfig,
+      packageManager: 'pnpm',
+      dependencies: ['github-actions', 'eslint', 'jest'],
+    });
+
+    const entries = await readZipEntries(zipBuffer);
+    const workflow = entries.get('.github/workflows/ci.yml');
+
+    expect(workflow).toContain('name: CI');
+    expect(workflow).toContain('uses: actions/setup-node@v4');
+    expect(workflow).toContain('cache: pnpm');
+    expect(workflow).toContain('pnpm install --frozen-lockfile');
+    expect(workflow).toContain('pnpm run lint');
+    expect(workflow).toContain('pnpm test');
+    expect(workflow).toContain('pnpm run build');
   });
 });

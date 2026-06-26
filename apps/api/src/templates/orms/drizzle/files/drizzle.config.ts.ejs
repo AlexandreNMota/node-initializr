@@ -1,0 +1,10 @@
+import { defineConfig } from 'drizzle-kit';
+
+export default defineConfig({
+  schema: './src/db/schema.<%= isTypeScript ? "ts" : "js" %>',
+  out: './drizzle',
+  dialect: '<%= database === "postgresql" ? "postgresql" : database === "mysql" ? "mysql" : "sqlite" %>',
+  dbCredentials: {
+    url: process.env.DATABASE_URL ?? '<%= database === "sqlite" ? "./database.sqlite" : "" %>',
+  },
+});
