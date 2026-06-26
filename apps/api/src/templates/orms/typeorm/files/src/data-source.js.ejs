@@ -1,0 +1,18 @@
+<% if (!isTypeScript) { %>
+    import 'reflect-metadata';
+    
+    import { DataSource } from 'typeorm';
+    
+    export const AppDataSource = new DataSource({
+      type: '<%= database === "mysql" ? "mysql" : database === "sqlite" ? "sqlite" : "postgres" %>',
+      <% if (database === 'sqlite') { %>
+      database: process.env.DATABASE_URL ?? './database.sqlite',
+      <% } else { %>
+      url: process.env.DATABASE_URL,
+      <% } %>
+      synchronize: false,
+      logging: false,
+      entities: [],
+      migrations: [],
+    });
+    <% } %>

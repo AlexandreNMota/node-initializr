@@ -309,4 +309,41 @@ describe('generateProject', () => {
     expect(packageJson.dependencies?.rxjs).toBe('7.8.1');
     expect(packageJson.scripts?.dev).toBe('tsx watch src/main.ts');
   });
+
+  it('deve gerar arquivos TypeORM e dependencias corretas', async () => {
+    const zipBuffer = await generateProject({
+      ...validConfig,
+      orm: 'typeorm',
+    });
+
+    const entries = await readZipEntries(zipBuffer);
+    const packageJson = JSON.parse(entries.get('package.json') ?? '{}') as {
+      dependencies?: Record<string, string>;
+    };
+
+    expect(entries.has('src/data-source.ts')).toBe(true);
+    expect(entries.get('src/data-source.ts')).toContain('DataSource');
+    expect(packageJson.dependencies?.typeorm).toBe('0.3.20');
+    expect(packageJson.dependencies?.['reflect-metadata']).toBe('0.2.2');
+  });
+
+  it('deve gerar arquivos Drizzle e dependencias corretas', async () => {
+    const zipBuffer = await generateProject({
+      ...validConfig,
+      orm: 'drizzle',
+    });
+
+    const entries = await readZipEntries(zipBuffer);
+    const packageJson = JSON.parse(entries.get('package.json') ?? '{}') as {
+      dependencies?: Record<string, string>;
+      devDependencies?: Record<string, string>;
+    };
+
+    expect(entries.has('src/lib/db.ts')).toBe(true);
+    expect(entries.has('src/db/schema.ts')).toBe(true);
+    expect(entries.has('drizzle.config.ts')).toBe(true);
+    expect(entries.get('src/lib/db.ts')).toContain('drizzle-orm/node-postgres');
+    expect(packageJson.dependencies?.['drizzle-orm']).toBe('0.31.4');
+    expect(packageJson.devDependencies?.['drizzle-kit']).toBe('0.22.8');
+  });
 });

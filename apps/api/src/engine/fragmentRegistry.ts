@@ -154,15 +154,54 @@ export const fragmentRegistry = {
   },
   'orms/typeorm': {
     id: 'orms/typeorm',
-    path: createFixturePath('orms-typeorm'),
+    path: createTemplatePath('orms', 'typeorm'),
     priority: 30,
-    manifest: { id: 'orms/typeorm' },
+    manifest: {
+      id: 'orms/typeorm',
+      dependencies: {
+        typeorm: '0.3.20',
+        'reflect-metadata': '0.2.2',
+      },
+      envVars: [
+        {
+          key: 'DATABASE_URL',
+          example: 'postgresql://postgres:postgres@localhost:5432/app',
+          description: 'String de conexao com o banco de dados',
+          required: true,
+        },
+      ],
+    },
   },
   'orms/drizzle': {
     id: 'orms/drizzle',
-    path: createFixturePath('orms-drizzle'),
+    path: createTemplatePath('orms', 'drizzle'),
     priority: 30,
-    manifest: { id: 'orms/drizzle' },
+    manifest: {
+      id: 'orms/drizzle',
+      dependencies: {
+        'drizzle-orm': '0.31.4',
+        pg: '8.12.0',
+        mysql2: '3.10.2',
+        'better-sqlite3': '11.1.2',
+      },
+      devDependencies: {
+        'drizzle-kit': '0.22.8',
+        '@types/pg': '8.11.6',
+        '@types/better-sqlite3': '7.6.10',
+      },
+      scripts: {
+        'db:generate': 'drizzle-kit generate',
+        'db:migrate': 'drizzle-kit migrate',
+      },
+      envVars: [
+        {
+          key: 'DATABASE_URL',
+          example: 'postgresql://postgres:postgres@localhost:5432/app',
+          description: 'String de conexao com o banco de dados',
+          required: true,
+        },
+      ],
+    },
   },
   'orms/mongoose': {
     id: 'orms/mongoose',

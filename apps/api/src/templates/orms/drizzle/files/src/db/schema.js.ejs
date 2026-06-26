@@ -1,0 +1,29 @@
+<% if (!isTypeScript) { %>
+    <% if (database === 'postgresql') { %>
+    import { pgTable, serial, text, timestamp } from 'drizzle-orm/pg-core';
+    
+    export const users = pgTable('users', {
+      id: serial('id').primaryKey(),
+      name: text('name').notNull(),
+      createdAt: timestamp('created_at').defaultNow().notNull(),
+    });
+    <% } %>
+    <% if (database === 'mysql') { %>
+    import { int, mysqlTable, text, timestamp } from 'drizzle-orm/mysql-core';
+    
+    export const users = mysqlTable('users', {
+      id: int('id').autoincrement().primaryKey(),
+      name: text('name').notNull(),
+      createdAt: timestamp('created_at').defaultNow().notNull(),
+    });
+    <% } %>
+    <% if (database === 'sqlite') { %>
+    import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+    
+    export const users = sqliteTable('users', {
+      id: integer('id').primaryKey({ autoIncrement: true }),
+      name: text('name').notNull(),
+      createdAt: text('created_at').notNull(),
+    });
+    <% } %>
+    <% } %>
