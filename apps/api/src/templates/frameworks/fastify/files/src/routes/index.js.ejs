@@ -1,0 +1,7 @@
+<% if (!isTypeScript) { %>
+    export function registerRoutes(app) {
+      app.get('/api/health', async () => ({
+        status: 'ok',
+      }));
+    }
+    <% } %>

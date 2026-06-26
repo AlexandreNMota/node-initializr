@@ -85,15 +85,39 @@ export const fragmentRegistry = {
   },
   'frameworks/fastify': {
     id: 'frameworks/fastify',
-    path: createFixturePath('frameworks-fastify'),
+    path: createTemplatePath('frameworks', 'fastify'),
     priority: 20,
-    manifest: { id: 'frameworks/fastify' },
+    manifest: {
+      id: 'frameworks/fastify',
+      dependencies: {
+        fastify: '4.28.1',
+      },
+      scripts: {
+        dev: 'tsx watch src/server.ts',
+        build: 'tsc',
+        start: 'node dist/server.js',
+      },
+    },
   },
   'frameworks/nestjs': {
     id: 'frameworks/nestjs',
-    path: createFixturePath('frameworks-nestjs'),
-    priority: 20,
-    manifest: { id: 'frameworks/nestjs' },
+    path: createTemplatePath('frameworks', 'nestjs'),
+    priority: 5,
+    manifest: {
+      id: 'frameworks/nestjs',
+      dependencies: {
+        '@nestjs/common': '10.3.10',
+        '@nestjs/core': '10.3.10',
+        '@nestjs/platform-express': '10.3.10',
+        'reflect-metadata': '0.2.2',
+        rxjs: '7.8.1',
+      },
+      scripts: {
+        dev: 'tsx watch src/main.ts',
+        build: 'tsc',
+        start: 'node dist/main.js',
+      },
+    },
   },
   'frameworks/hono': {
     id: 'frameworks/hono',

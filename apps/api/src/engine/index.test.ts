@@ -1,7 +1,6 @@
 import type { GenerateConfig } from '@node-initializr/shared';
 import JSZip from 'jszip';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-
 import { generateProject } from './index.js';
 
 const validConfig: GenerateConfig = {
@@ -17,6 +16,22 @@ const validConfig: GenerateConfig = {
   dependencies: ['docker', 'swagger'],
 };
 
+async function readZipEntries(zipBuffer: Buffer): Promise<Map<string, string>> {
+  const zip = await JSZip.loadAsync(zipBuffer);
+  const entries = new Map<string, string>();
+
+  await Promise.all(
+    Object.entries(zip.files).map(async ([fileName, file]) => {
+      if (file.dir) {
+        return;
+      }
+
+      entries.set(fileName, await file.async('string'));
+    }),
+  );
+
+  return entries;
+}
 describe('generateProject', () => {
   afterEach(() => {
     vi.doUnmock('./resolver.js');
@@ -251,5 +266,47 @@ describe('generateProject', () => {
 
     expect(envExample).toContain('JWT_SECRET=change-me');
     expect(envExample).toContain('JWT_EXPIRES_IN=1d');
+  });
+
+  it('deve gerar projeto Fastify com arquivos e dependencia corretos', async () => {
+    const zipBuffer = await generateProject({
+      ...validConfig,
+      framework: 'fastify',
+    });
+
+    const entries = await readZipEntries(zipBuffer);
+    const packageJson = JSON.parse(entries.get('package.json') ?? '{}') as {
+      dependencies?: Record<string, string>;
+    };
+
+    expect(entries.has('src/app.ts')).toBe(true);
+    expect(entries.has('src/server.ts')).toBe(true);
+    expect(entries.has('src/routes/index.ts')).toBe(true);
+    expect(entries.get('src/app.ts')).toContain("from 'fastify'");
+    expect(packageJson.dependencies?.fastify).toBe('4.28.1');
+  });
+
+  it('deve gerar projeto NestJS com arquivos e dependencias corretos', async () => {
+    const zipBuffer = await generateProject({
+      ...validConfig,
+      framework: 'nestjs',
+    });
+
+    const entries = await readZipEntries(zipBuffer);
+    const packageJson = JSON.parse(entries.get('package.json') ?? '{}') as {
+      dependencies?: Record<string, string>;
+      scripts?: Record<string, string>;
+    };
+
+    expect(entries.has('src/main.ts')).toBe(true);
+    expect(entries.has('src/app.module.ts')).toBe(true);
+    expect(entries.has('src/health.controller.ts')).toBe(true);
+    expect(entries.get('src/main.ts')).toContain('@nestjs/core');
+    expect(packageJson.dependencies?.['@nestjs/core']).toBe('10.3.10');
+    expect(packageJson.dependencies?.['@nestjs/common']).toBe('10.3.10');
+    expect(packageJson.dependencies?.['@nestjs/platform-express']).toBe('10.3.10');
+    expect(packageJson.dependencies?.['reflect-metadata']).toBe('0.2.2');
+    expect(packageJson.dependencies?.rxjs).toBe('7.8.1');
+    expect(packageJson.scripts?.dev).toBe('tsx watch src/main.ts');
   });
 });
