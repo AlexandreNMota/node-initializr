@@ -247,21 +247,52 @@ export const fragmentRegistry = {
 
   'deps/redis': {
     id: 'deps/redis',
-    path: createFixturePath('deps-redis'),
+    path: createTemplatePath('deps', 'redis'),
     priority: 50,
-    manifest: { id: 'deps/redis' },
+    manifest: {
+      id: 'deps/redis',
+      dependencies: {
+        ioredis: '5.4.1',
+      },
+      envVars: [
+        {
+          key: 'REDIS_URL',
+          example: 'redis://localhost:6379',
+          description: 'URL de conexao com Redis',
+          required: true,
+        },
+      ],
+    },
   },
   'deps/swagger': {
     id: 'deps/swagger',
-    path: createFixturePath('deps-swagger'),
+    path: createTemplatePath('deps', 'swagger'),
     priority: 50,
-    manifest: { id: 'deps/swagger' },
+    manifest: {
+      id: 'deps/swagger',
+      dependencies: {
+        'swagger-ui-express': '5.0.1',
+      },
+      devDependencies: {
+        '@types/swagger-ui-express': '4.1.7',
+      },
+    },
   },
   'deps/jest': {
     id: 'deps/jest',
-    path: createFixturePath('deps-jest'),
+    path: createTemplatePath('deps', 'jest'),
     priority: 50,
-    manifest: { id: 'deps/jest' },
+    manifest: {
+      id: 'deps/jest',
+      devDependencies: {
+        jest: '29.7.0',
+        'ts-jest': '29.2.3',
+        '@types/jest': '29.5.12',
+      },
+      scripts: {
+        test: 'jest',
+      },
+    },
   },
   'deps/docker': {
     id: 'deps/docker',
@@ -271,15 +302,32 @@ export const fragmentRegistry = {
   },
   'deps/github-actions': {
     id: 'deps/github-actions',
-    path: createFixturePath('deps-github-actions'),
+    path: createTemplatePath('deps', 'github-actions'),
     priority: 90,
-    manifest: { id: 'deps/github-actions' },
+    manifest: {
+      id: 'deps/github-actions',
+    },
   },
   'deps/eslint': {
     id: 'deps/eslint',
-    path: createFixturePath('deps-eslint'),
+    path: createTemplatePath('deps', 'eslint'),
     priority: 50,
-    manifest: { id: 'deps/eslint' },
+    manifest: {
+      id: 'deps/eslint',
+      devDependencies: {
+        eslint: '9.30.1',
+        '@eslint/js': '9.30.1',
+        globals: '15.8.0',
+        prettier: '3.3.3',
+        'eslint-config-prettier': '9.1.0',
+        'typescript-eslint': '8.35.1',
+      },
+      scripts: {
+        lint: 'eslint .',
+        format: 'prettier . --write',
+        'format:check': 'prettier . --check',
+      },
+    },
   },
   'deps/pino': {
     id: 'deps/pino',

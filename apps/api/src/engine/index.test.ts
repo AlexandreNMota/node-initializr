@@ -346,4 +346,113 @@ describe('generateProject', () => {
     expect(packageJson.dependencies?.['drizzle-orm']).toBe('0.31.4');
     expect(packageJson.devDependencies?.['drizzle-kit']).toBe('0.22.8');
   });
+
+  it('deve gerar arquivos Redis e dependencia correta', async () => {
+    const zipBuffer = await generateProject({
+      ...validConfig,
+      dependencies: ['redis'],
+    });
+
+    const entries = await readZipEntries(zipBuffer);
+    const packageJson = JSON.parse(entries.get('package.json') ?? '{}') as {
+      dependencies?: Record<string, string>;
+    };
+
+    expect(entries.has('src/lib/redis.ts')).toBe(true);
+    expect(entries.get('src/lib/redis.ts')).toContain('ioredis');
+    expect(entries.get('.env.example')).toContain('REDIS_URL=redis://localhost:6379');
+    expect(packageJson.dependencies?.ioredis).toBe('5.4.1');
+  });
+  it('deve gerar setup Jest JavaScript quando language e javascript', async () => {
+    const zipBuffer = await generateProject({
+      ...validConfig,
+      language: 'javascript',
+      dependencies: ['jest'],
+    });
+
+    const entries = await readZipEntries(zipBuffer);
+
+    expect(entries.has('jest.config.js')).toBe(true);
+    expect(entries.has('jest.config.ts')).toBe(false);
+    expect(entries.has('src/test/health.test.js')).toBe(true);
+  });
+
+  it('deve gerar setup Jest e dependencias corretas', async () => {
+    const zipBuffer = await generateProject({
+      ...validConfig,
+      dependencies: ['jest'],
+    });
+
+    const entries = await readZipEntries(zipBuffer);
+    const packageJson = JSON.parse(entries.get('package.json') ?? '{}') as {
+      devDependencies?: Record<string, string>;
+      scripts?: Record<string, string>;
+    };
+
+    expect(entries.has('jest.config.ts')).toBe(true);
+    expect(entries.has('src/test/health.test.ts')).toBe(true);
+    expect(packageJson.devDependencies?.jest).toBe('29.7.0');
+    expect(packageJson.devDependencies?.['ts-jest']).toBe('29.2.3');
+    expect(packageJson.devDependencies?.['@types/jest']).toBe('29.5.12');
+    expect(packageJson.scripts?.test).toBe('jest');
+  });
+
+  it('deve gerar setup ESLint e Prettier', async () => {
+    const zipBuffer = await generateProject({
+      ...validConfig,
+      dependencies: ['eslint'],
+    });
+
+    const entries = await readZipEntries(zipBuffer);
+    const packageJson = JSON.parse(entries.get('package.json') ?? '{}') as {
+      devDependencies?: Record<string, string>;
+      scripts?: Record<string, string>;
+    };
+
+    expect(entries.has('eslint.config.js')).toBe(true);
+    expect(entries.has('.prettierrc')).toBe(true);
+    expect(entries.get('eslint.config.js')).toContain('eslint-config-prettier');
+    expect(packageJson.devDependencies?.eslint).toBe('9.30.1');
+    expect(packageJson.devDependencies?.prettier).toBe('3.3.3');
+    expect(packageJson.scripts?.lint).toBe('eslint .');
+    expect(packageJson.scripts?.format).toBe('prettier . --write');
+  });
+
+  it('deve gerar setup Swagger para Express', async () => {
+    const zipBuffer = await generateProject({
+      ...validConfig,
+      dependencies: ['swagger'],
+    });
+
+    const entries = await readZipEntries(zipBuffer);
+    const packageJson = JSON.parse(entries.get('package.json') ?? '{}') as {
+      dependencies?: Record<string, string>;
+      devDependencies?: Record<string, string>;
+    };
+
+    expect(entries.has('src/docs/swagger.ts')).toBe(true);
+    expect(entries.has('src/docs/setupSwagger.ts')).toBe(true);
+    expect(entries.get('src/app.ts')).toContain('setupSwagger(app)');
+    expect(packageJson.dependencies?.['swagger-ui-express']).toBe('5.0.1');
+    expect(packageJson.devDependencies?.['@types/swagger-ui-express']).toBe('4.1.7');
+  });
+
+  it('deve gerar workflow GitHub Actions', async () => {
+    const zipBuffer = await generateProject({
+      ...validConfig,
+      packageManager: 'pnpm',
+      dependencies: ['github-actions', 'eslint', 'jest'],
+    });
+
+    const entries = await readZipEntries(zipBuffer);
+    const workflow = entries.get('.github/workflows/ci.yml');
+
+    expect(workflow).toContain('name: CI');
+    expect(workflow).toContain('uses: actions/setup-node@v4');
+    expect(workflow).toContain('cache: pnpm');
+    expect(workflow).toContain('pnpm install --frozen-lockfile');
+    expect(workflow).toContain('pnpm run lint');
+    expect(workflow).toContain('pnpm test');
+    expect(workflow).toContain('pnpm run build');
+  });
 });
